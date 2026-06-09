@@ -1,0 +1,1204 @@
+<?php
+// index.php
+// Sistema de Planejamento Pessoal - Mobile Premium Edition (iPhone Optimized)
+?>
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Painel Exclusivo - Planejamento & Rotina</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght=300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-principal: #0a0a0a; 
+            --bg-card: rgba(20, 20, 20, 0.82); 
+            --bg-input: rgba(28, 28, 30, 0.9);  
+            --texto-principal: #f5f5f7;
+            --texto-secundario: #8e8e93;
+            --cor-accent: #d4af37;   
+            --cor-sucesso: #30d158;  
+            --cor-perigo: #ff453a;   
+            --borda: rgba(255, 255, 255, 0.08);
+            --blur-efeito: blur(25px); 
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Inter', sans-serif;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background: linear-gradient(rgba(0, 0, 0, 0.7), rgba(0, 0, 0, 0.7)), url('01.png') no-repeat center center fixed;
+            background-size: cover;
+            color: var(--texto-principal);
+            padding: 16px;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-start;
+            overflow-x: hidden;
+        }
+
+        /* TELA DE LOGIN MINIMALISTA */
+        .tela-login-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(rgba(0, 0, 0, 0.75), rgba(0, 0, 0, 0.85)), url('02.jpg') no-repeat center center fixed;
+            background-size: cover;
+            z-index: 20000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+            transition: opacity 0.5s ease, visibility 0.5s ease;
+        }
+        .tela-login-overlay.ocultar {
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+        }
+        .card-login {
+            background: var(--bg-card);
+            backdrop-filter: var(--blur-efeito);
+            -webkit-backdrop-filter: var(--blur-efeito);
+            border: 1px solid var(--borda);
+            border-radius: 24px;
+            padding: 30px 24px;
+            width: 100%;
+            max-width: 360px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            text-align: center;
+        }
+        .card-login h2 {
+            font-size: 1.4rem;
+            color: #fff;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+        }
+        .card-login h2 span {
+            color: var(--cor-accent);
+        }
+        .grupo-input-login {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            text-align: left;
+        }
+        .grupo-input-login label {
+            font-size: 0.75rem;
+            color: var(--texto-secundario);
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            padding-left: 4px;
+        }
+        .erro-login {
+            color: var(--cor-perigo);
+            font-size: 0.82rem;
+            font-weight: 500;
+            display: none;
+        }
+
+        /* Topo Fixo com Gatilho do Menu */
+        .top-bar {
+            width: 100%;
+            max-width: 430px; 
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 4px;
+            margin-bottom: 10px;
+        }
+
+        .btn-menu-trigger {
+            background: var(--bg-card);
+            border: 1px solid var(--borda);
+            backdrop-filter: var(--blur-efeito);
+            -webkit-backdrop-filter: var(--blur-efeito);
+            color: #fff;
+            width: 42px;
+            height: 42px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.1rem;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            transition: transform 0.2s;
+        }
+        .btn-menu-trigger:active { transform: scale(0.92); }
+
+        .header-title-mini {
+            font-size: 0.95rem;
+            font-weight: 700;
+            letter-spacing: 0.05em;
+            color: var(--cor-accent);
+            text-transform: uppercase;
+        }
+
+        /* Menu Lateral Deslizante (Sidebar) */
+        .sidebar-menu {
+            position: fixed;
+            top: 0;
+            left: -280px;
+            width: 280px;
+            height: 100%;
+            background: rgba(15, 15, 15, 0.96);
+            backdrop-filter: blur(30px);
+            -webkit-backdrop-filter: blur(30px);
+            box-shadow: 5px 0 30px rgba(0,0,0,0.5);
+            z-index: 9999;
+            transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            padding: 30px 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 1px solid var(--borda);
+        }
+        .sidebar-menu.aberto { left: 0; }
+
+        .sidebar-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(4px);
+            z-index: 9998;
+            display: none;
+        }
+        .sidebar-overlay.visivel { display: block; }
+
+        .sidebar-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--borda);
+            padding-bottom: 15px;
+        }
+        .sidebar-header h2 { font-size: 1.1rem; color: #fff; font-weight: 700; }
+
+        .btn-fechar-menu {
+            background: none;
+            border: none;
+            color: var(--texto-secundario);
+            font-size: 1.2rem;
+            cursor: pointer;
+        }
+
+        .menu-opcoes-lista {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .btn-tempo {
+            background-color: transparent;
+            color: var(--texto-secundario);
+            border: 1px solid transparent;
+            padding: 14px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 0.95rem;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            width: 100%;
+            text-align: left;
+        }
+        .btn-tempo i { color: var(--texto-secundario); width: 20px; text-align: center; }
+        .btn-tempo.ativo, .btn-tempo:hover {
+            background-color: rgba(255,255,255,0.07);
+            color: #fff;
+        }
+        .btn-tempo.ativo i { color: var(--cor-accent); }
+
+        .btn-tempo.btn-config {
+            margin-top: 20px;
+            border: 1px dashed var(--cor-accent);
+            color: var(--cor-accent);
+        }
+        .btn-tempo.btn-config i { color: var(--cor-accent); }
+        .btn-tempo.btn-config:hover { background-color: rgba(212, 175, 55, 0.1); }
+
+        /* Card Centralizado e Flutuante (Estilo iPhone) */
+        .container-principal {
+            width: 100%;
+            max-width: 430px;
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* ESTILOS DE FOCO TEMPORAL DINÂMICO */
+        .dia-card {
+            background-color: var(--bg-card);
+            backdrop-filter: var(--blur-efeito);
+            -webkit-backdrop-filter: var(--blur-efeito);
+            border-radius: 24px;
+            border: 1px solid var(--borda);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            min-height: 520px;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+            transform: translateZ(0);
+            transition: opacity 0.4s ease, filter 0.4s ease;
+        }
+
+        .dia-card.passado { opacity: 0.4; filter: grayscale(20%); }
+        .dia-card.hoje {
+            opacity: 1 !important;
+            filter: none !important;
+            border-color: var(--cor-accent);
+            box-shadow: 0 0 30px rgba(212, 175, 55, 0.18);
+        }
+        .dia-card.futuro { opacity: 0.8; }
+
+        .dia-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .dia-titulo { font-size: 1.25rem; font-weight: 700; color: #fff; letter-spacing: -0.02em; }
+        .dia-data { font-size: 0.82rem; color: var(--texto-secundario); margin-top: 2px; }
+        .contador-tarefas { background-color: var(--bg-input); padding: 5px 12px; border-radius: 20px; font-size: 0.75rem; color: var(--cor-accent); border: 1px solid var(--borda); font-weight: 600; }
+
+        .progresso-container {
+            width: 100%;
+            background-color: rgba(255, 255, 255, 0.08);
+            height: 6px;
+            border-radius: 3px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+
+        .progresso-barra {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, var(--cor-accent), var(--cor-sucesso));
+            border-radius: 3px;
+            transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        /* Seletor Inline de Calendário para Próximos Meses */
+        .calendario-picker-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            padding: 12px;
+            margin-bottom: 15px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        .calendario-label { font-size: 0.75rem; font-weight: 600; color: var(--cor-accent); text-transform: uppercase; letter-spacing: 0.05em; }
+
+        .rotina-lista {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            flex-grow: 1;
+            overflow-y: auto;
+            max-height: 380px;
+            padding-right: 2px;
+        }
+        .rotina-lista::-webkit-scrollbar { width: 0px; background: transparent; }
+
+        .rotina-item {
+            background-color: var(--bg-input);
+            border: 1px solid var(--borda);
+            padding: 12px;
+            border-radius: 14px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            transition: transform 0.2s ease, opacity 0.2s ease;
+        }
+
+        @keyframes pulse-success {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.02); border-color: var(--cor-sucesso); }
+            100% { transform: scale(1); }
+        }
+
+        .rotina-item.animar-concluido { animation: pulse-success 0.4s ease-in-out; }
+        .rotina-item.concluido { border-color: rgba(48, 209, 88, 0.25); opacity: 0.55; }
+
+        .item-corpo { display: flex; align-items: flex-start; gap: 12px; flex-grow: 1; cursor: pointer; min-width: 0; }
+
+        .checkbox-custom {
+            width: 19px;
+            height: 19px;
+            border: 2px solid var(--texto-secundario);
+            border-radius: 6px;
+            margin-top: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            transition: background-color 0.15s ease, border-color 0.15s ease;
+        }
+
+        .rotina-item.concluido .checkbox-custom { background-color: var(--cor-sucesso); border-color: var(--cor-sucesso); }
+        .checkbox-custom i { color: black; font-size: 0.65rem; display: none; font-weight: 900; }
+        .rotina-item.concluido .checkbox-custom i { display: block; }
+
+        .item-info-wrapper { display: flex; flex-direction: column; min-width: 0; flex-grow: 1; gap: 6px; }
+        .item-conteudo-linha { display: flex; justify-content: space-between; align-items: center; gap: 10px; width: 100%; }
+        .item-texto-wrapper { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; min-width: 0; flex-grow: 1; }
+
+        .item-texto { font-size: 0.92rem; color: var(--texto-principal); word-break: break-word; font-weight: 500; line-height: 1.3; }
+        .rotina-item.concluido .item-texto { text-decoration: line-through; color: var(--texto-secundario); }
+
+        .item-meta { display: flex; gap: 5px; flex-wrap: wrap; align-items: center; }
+        .tag-categoria { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background-color: rgba(212, 175, 55, 0.1); color: var(--cor-accent); border: 1px solid rgba(212, 175, 55, 0.15); white-space: nowrap; max-width: 120px; overflow: hidden; text-overflow: ellipsis; }
+        .tag-subcategoria { font-size: 0.65rem; padding: 2px 6px; border-radius: 4px; background-color: #2c2c2e; color: #fff; white-space: nowrap; max-width: 110px; overflow: hidden; text-overflow: ellipsis; }
+        
+        .tag-hora-topo { 
+            font-size: 0.72rem; 
+            padding: 1px 5px; 
+            border-radius: 4px; 
+            background-color: rgba(255,255,255,0.08); 
+            color: #fff; 
+            white-space: nowrap; 
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+            font-weight: 600;
+            flex-shrink: 0;
+        }
+        .tag-hora-topo i { color: #ffffff !important; font-size: 0.7rem; }
+
+        .item-acoes { display: flex; gap: 2px; align-items: center; flex-shrink: 0; }
+        .btn-acao { background: none; border: none; color: #ffffff !important; cursor: pointer; padding: 6px; font-size: 0.82rem; }
+        .btn-excluir:hover { color: var(--cor-perigo) !important; }
+
+        .form-add {
+            background-color: var(--bg-input);
+            border: 1px solid var(--borda);
+            border-radius: 16px;
+            padding: 14px;
+            margin-top: 12px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .form-row { display: flex; gap: 8px; }
+        .input-texto, .select-custom, .input-hora, .input-data-picker {
+            background-color: rgba(20, 20, 20, 0.6);
+            border: 1px solid var(--borda);
+            border-radius: 8px;
+            padding: 10px;
+            color: white;
+            font-size: 0.85rem;
+            width: 100%;
+            outline: none;
+            -webkit-appearance: none;
+        }
+        .input-texto:focus, .select-custom:focus { border-color: var(--cor-accent); }
+        
+        .btn-salvar { 
+            background-color: var(--cor-accent); 
+            color: #000; 
+            border: none; 
+            border-radius: 8px; 
+            padding: 11px; 
+            font-weight: 700; 
+            cursor: pointer; 
+            font-size: 0.9rem;
+        }
+        .btn-salvar:active { opacity: 0.8; }
+
+        .painel-config {
+            background-color: var(--bg-card);
+            backdrop-filter: var(--blur-efeito);
+            -webkit-backdrop-filter: var(--blur-efeito);
+            border: 1px solid var(--borda);
+            border-radius: 24px;
+            padding: 20px;
+            display: none;
+            box-shadow: 0 12px 40px rgba(0,0,0,0.4);
+        }
+        .painel-config.visivel { display: flex; flex-direction: column; gap: 15px; }
+
+        /* ESTILOS EXCLUSIVOS DO PAINEL RELATÓRIO */
+        .relatorio-container {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .grid-cards-mini {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        .card-mini-metrica {
+            background: var(--bg-input);
+            border: 1px solid var(--borda);
+            border-radius: 14px;
+            padding: 12px 8px;
+            text-align: center;
+        }
+        .card-mini-metrica span { font-size: 0.7rem; color: var(--texto-secundario); display: block; font-weight: 600; text-transform: uppercase; margin-bottom: 4px;}
+        .card-mini-metrica strong { font-size: 1.1rem; color: #fff; font-weight: 700; }
+        .card-mini-metrica strong.gold { color: var(--cor-accent); }
+
+        .box-grafico {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--borda);
+            border-radius: 16px;
+            padding: 14px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        .box-grafico h4 { font-size: 0.85rem; color: #fff; margin-bottom: 12px; align-self: flex-start; font-weight: 600; width: 100%; border-bottom: 1px solid var(--borda); padding-bottom: 6px;}
+        .wrapper-canvas { width: 100%; position: relative; height: 180px; }
+
+        /* CAIXINHA DE EDIÇÃO INTERNA CUSTOMIZADA (CSS MODAL) */
+        .custom-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            z-index: 10000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .custom-modal-overlay.visivel { display: flex; }
+        .custom-modal-box {
+            background: var(--bg-card);
+            border: 1px solid var(--cor-accent);
+            border-radius: 20px;
+            padding: 20px;
+            width: 100%;
+            max-width: 380px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 14px;
+        }
+        .custom-modal-box h3 {
+            font-size: 1.05rem;
+            color: #fff;
+            font-weight: 700;
+            border-bottom: 1px solid var(--borda);
+            padding-bottom: 8px;
+        }
+        .custom-modal-box .modal-botoes {
+            display: flex;
+            gap: 8px;
+            margin-top: 6px;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="tela-login-overlay" id="tela-login">
+        <div class="card-login">
+            <h2>Painel <span>Premium</span></h2>
+            <div class="grupo-input-login">
+                <label>Usuário</label>
+                <input type="text" id="login-usuario" class="input-texto" placeholder="Digite seu usuário">
+            </div>
+            <div class="grupo-input-login">
+                <label>Senha</label>
+                <input type="password" id="login-senha" class="input-texto" placeholder="Digite sua senha">
+            </div>
+            <span class="erro-login" id="erro-mensagem">Usuário ou senha incorretos!</span>
+            <button class="btn-salvar" style="width: 100%; margin-top: 10px;" onclick="validarAcessoLogin()">Entrar</button>
+        </div>
+    </div>
+
+    <audio id="audio-confirmacao" src="habito.mp3" preload="auto"></audio>
+
+    <div class="sidebar-overlay" id="menu-overlay" onclick="toggleMenuLateral()"></div>
+    <div class="sidebar-menu" id="sidebar-menu">
+        <div class="sidebar-header">
+            <h2>Navegação</h2>
+            <button class="btn-fechar-menu" onclick="toggleMenuLateral()"><i class="fas fa-times"></i></button>
+        </div>
+        <div class="menu-opcoes-lista">
+            <button class="btn-tempo ativo" id="tempo-hoje" onclick="selecionarOpcaoTempo('hoje')"><i class="fas fa-bolt"></i> Hoje</button>
+            <button class="btn-tempo" id="tempo-semana" onclick="selecionarOpcaoTempo('semana')"><i class="fas fa-calendar-alt"></i> Esta Semana</button>
+            <button class="btn-tempo" id="tempo-mes" onclick="selecionarOpcaoTempo('mes')"><i class="fas fa-layer-group"></i> Próximos Meses</button>
+            <button class="btn-tempo" id="tempo-relatorio" onclick="selecionarOpcaoTempo('relatorio')"><i class="fas fa-chart-pie"></i> Relatório</button>
+            <button class="btn-tempo btn-config" onclick="abrirConfiguracoes()"><i class="fas fa-sliders-h"></i> Ajustar Categorias</button>
+        </div>
+    </div>
+
+    <div class="top-bar">
+        <button class="btn-menu-trigger" onclick="toggleMenuLateral()"><i class="fas fa-bars"></i></button>
+        <span class="header-title-mini">Evolução Contínua</span>
+        <div style="width: 42px;"></div>
+    </div>
+
+    <div class="container-principal">
+        
+        <div class="painel-config" id="painel-config">
+            <div style="display:flex; justify-content:space-between; align-items:center;">
+                <h3 style="color:#fff; font-size:1.1rem;">Configurações</h3>
+                <button class="btn-salvar" style="padding: 4px 10px; font-size:0.75rem;" onclick="fecharConfiguracoes()">Fechar</button>
+            </div>
+            <button class="btn-salvar" style="background-color: var(--cor-sucesso); color:#000;" onclick="abrirModalNovaCategoriaPai()">+ Nova Categoria Pai</button>
+            <div class="form-row">
+                <select class="select-custom" id="config-cat-select" onchange="renderizarGerenciadorSubs()"></select>
+            </div>
+            <div class="form-row">
+                <button class="input-texto" style="text-align:center; background:rgba(255,255,255,0.05);" onclick="abrirModalRenomearCategoriaPai()">Renomear</button>
+                <button class="input-texto" style="text-align:center; color:var(--cor-perigo); background:rgba(255,255,255,0.05);" onclick="removerCategoriaPai()">Remover</button>
+            </div>
+            <div>
+                <h4 style="font-size:0.85rem; color:var(--texto-secundario); margin-bottom:8px;">Subcategorias vinculadas:</h4>
+                <div id="lista-subs-config" style="display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px;"></div>
+                <button class="btn-salvar" style="width:100%;" onclick="abrirModalNovaSubcategoria()">+ Incluir Subcategoria</button>
+            </div>
+        </div>
+
+        <div id="agenda-semanal" style="display: flex; flex-direction: column; gap: 16px;"></div>
+
+    </div>
+
+    <div class="custom-modal-overlay" id="custom-modal">
+        <div class="custom-modal-box">
+            <h3 id="modal-titulo">Editar Informação</h3>
+            <input type="text" class="input-texto" id="modal-input-valor" placeholder="Digite o novo valor...">
+            <div class="modal-botoes">
+                <button class="btn-salvar" style="background:#2c2c2e; color:#fff; width:50%;" onclick="fecharModalCustom()">Cancelar</button>
+                <button class="btn-salvar" style="width:50%;" id="modal-btn-confirmar">Salvar</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let dadosCategorias = JSON.parse(localStorage.getItem('pb_categorias_v5'));
+        if (!dadosCategorias) {
+            dadosCategorias = {
+                1: { nome: "Saúde física", icone: "fa-heartbeat", subs: ["Alimentação", "Exercícios", "Sono", "Consultas médicas"] },
+                2: { nome: "Saúde mental/emocional", icone: "fa-brain", subs: ["Controle do estresse", "Lazer", "Autoconhecimento", "Equilíbrio emocional"] },
+                3: { nome: "Família", icone: "fa-users", subs: ["Relacionamento com parentes", "Relacionamento com filhos", "Relacionamento com cônjuge", "Tempo de qualidade"] },
+                4: { nome: "Relacionamentos/amizades", icone: "fa-comments", subs: ["Amigos", "Vida social", "Rede de apoio"] },
+                5: { nome: "Vida espiritual", icone: "fa-dove", subs: ["Fé", "Oração", "Atividades religiosas", "Valores pessoais"] },
+                6: { nome: "Trabalho e carreira", icone: "fa-briefcase", subs: ["Emprego", "Desenvolvimento profissional", "Objetivos de carreira"] },
+                7: { nome: "Finanças", icone: "fa-wallet", subs: ["Controle de gastos", "Poupança", "Investimentos", "Planejamento"] },
+                8: { nome: "Educação e aprendizado", icone: "fa-graduation-cap", subs: ["Cursos", "Leitura", "Novas habilidades"] },
+                9: { nome: "Lazer e hobbies", icone: "fa-gamepad", subs: ["Esportes", "Música", "Jogos", "Passeios"] },
+                10: { nome: "Objetivos e propósito", icone: "fa-bullseye", subs: ["Metas", "Projetos pessoais", "Sonhos"] }
+            };
+            localStorage.setItem('pb_categorias_v5', JSON.stringify(dadosCategorias));
+        }
+
+        // AJUSTADO: A página inicial principal passa a ser rigorosamente 'hoje' ao carregar
+        let filtroTempoAtual = 'hoje';
+        let dataSelecionadaCalendario = new Date().toISOString().split('T')[0]; 
+        let rotinaUsuario = JSON.parse(localStorage.getItem('pb_agenda_v5')) || {};
+        
+        let instanciaGraficoLinha = null;
+        let instanciaGraficoPizza = null;
+
+        // VALIDAÇÃO E EFEITO ESPECIAL DE LOGIN
+        function validarAcessoLogin() {
+            const usr = document.getElementById('login-usuario').value.trim().toLowerCase();
+            const pass = document.getElementById('login-senha').value;
+            const erroMsg = document.getElementById('erro-mensagem');
+
+            if (usr === "john" && pass === "souforte") {
+                erroMsg.style.display = 'none';
+                const telaLogin = document.getElementById('tela-login');
+                telaLogin.classList.add('ocultar');
+                
+                // Efeito especial: Explosão festiva de confetes dourados e brancos ao entrar
+                setTimeout(() => {
+                    canvasConfetti({ particleCount: 150, spread: 80, origin: { y: 0.5 }, colors: ['#d4af37', '#ffffff', '#ac8e68'] });
+                }, 300);
+            } else {
+                erroMsg.style.display = 'block';
+            }
+        }
+
+        function salvarDados() {
+            localStorage.setItem('pb_agenda_v5', JSON.stringify(rotinaUsuario));
+            localStorage.setItem('pb_categorias_v5', JSON.stringify(dadosCategorias));
+        }
+
+        function toggleMenuLateral() {
+            document.getElementById('sidebar-menu').classList.toggle('aberto');
+            document.getElementById('menu-overlay').classList.toggle('visivel');
+        }
+
+        function abrirModalCustom(titulo, valorInicial, callbackConfirmar) {
+            document.getElementById('modal-titulo').innerText = titulo;
+            const input = document.getElementById('modal-input-valor');
+            input.value = valorInicial;
+            document.getElementById('custom-modal').classList.add('visivel');
+            
+            const btnConfirmar = document.getElementById('modal-btn-confirmar');
+            btnConfirmar.onclick = function() {
+                callbackConfirmar(input.value);
+                fecharModalCustom();
+            };
+            setTimeout(() => input.focus(), 100);
+        }
+
+        function fecharModalCustom() {
+            document.getElementById('custom-modal').classList.remove('visivel');
+        }
+
+        function selecionarOpcaoTempo(novoTempo) {
+            filtroTempoAtual = novoTempo;
+            document.querySelectorAll('.btn-tempo').forEach(b => b.classList.remove('ativo'));
+            const elem = document.getElementById(`tempo-${novoTempo}`);
+            if(elem) elem.classList.add('ativo');
+            toggleMenuLateral();
+            fecharConfiguracoes();
+            renderizarAgenda();
+        }
+
+        function abrirConfiguracoes() {
+            toggleMenuLateral();
+            const painel = document.getElementById('painel-config');
+            painel.classList.add('visivel');
+            
+            const select = document.getElementById('config-cat-select');
+            select.innerHTML = '';
+            for (const [id, cat] of Object.entries(dadosCategorias)) {
+                select.innerHTML += `<option value="${id}">${id}. ${cat.nome}</option>`;
+            }
+            renderizarGerenciadorSubs();
+            document.getElementById('agenda-semanal').style.display = 'none';
+        }
+
+        function fecharConfiguracoes() {
+            document.getElementById('painel-config').classList.remove('visivel');
+            document.getElementById('agenda-semanal').style.display = 'flex';
+        }
+
+        function renderizarGerenciadorSubs() {
+            const catId = document.getElementById('config-cat-select').value;
+            const container = document.getElementById('lista-subs-config');
+            container.innerHTML = '';
+            if(!dadosCategorias[catId]) return;
+
+            dadosCategorias[catId].subs.forEach((sub, idx) => {
+                container.innerHTML += `
+                    <span class="tag-subcategoria" style="padding:6px 12px; display:inline-flex; align-items:center; gap:8px; background-color:var(--bg-input);">
+                        ${sub}
+                        <i class="fas fa-times" style="cursor:pointer; color:var(--cor-perigo);" onclick="removerSubcategoria('${catId}', ${idx})"></i>
+                    </span>
+                `;
+            });
+            atualizarTodosSelectsCards();
+        }
+
+        function abrirModalNovaCategoriaPai() {
+            abrirModalCustom("Nova Categoria Pai", "", function(nome) {
+                if (!nome.trim()) return;
+                const ids = Object.keys(dadosCategorias).map(Number);
+                const proximoId = ids.length > 0 ? Math.max(...ids) + 1 : 1;
+                dadosCategorias[proximoId] = { nome: nome.trim(), icone: "fa-star", subs: ["Geral"] };
+                salvarDados(); abrirConfiguracoes();
+            });
+        }
+
+        function abrirModalRenomearCategoriaPai() {
+            const catId = document.getElementById('config-cat-select').value;
+            abrirModalCustom("Renomear Categoria Pai", dadosCategorias[catId].nome, function(novoNome) {
+                if(novoNome.trim()) { 
+                    dadosCategorias[catId].nome = novoNome.trim(); 
+                    salvarDados(); abrirConfiguracoes(); 
+                }
+            });
+        }
+
+        function removerCategoriaPai() {
+            const catId = document.getElementById('config-cat-select').value;
+            if(confirm("Remover categoria completa?")) { delete dadosCategorias[catId]; salvarDados(); abrirConfiguracoes(); }
+        }
+
+        function abrirModalNovaSubcategoria() {
+            const catId = document.getElementById('config-cat-select').value;
+            abrirModalCustom("Incluir Subcategoria", "", function(nomeSub) {
+                if(nomeSub.trim()) { 
+                    dadosCategorias[catId].subs.push(nomeSub.trim()); 
+                    salvarDados(); renderizarGerenciadorSubs(); 
+                }
+            });
+        }
+
+        function removerSubcategoria(catId, idx) {
+            dadosCategorias[catId].subs.splice(idx, 1); salvarDados(); renderizarGerenciadorSubs();
+        }
+
+        function atualizarSubcategoriasSelect(blocoId) {
+            const catSel = document.getElementById(`cat-${blocoId}`);
+            const subSel = document.getElementById(`sub-${blocoId}`);
+            if(!catSel || !subSel) return;
+            subSel.innerHTML = '';
+            if(dadosCategorias[catSel.value]) {
+                dadosCategorias[catSel.value].subs.forEach(s => { subSel.innerHTML += `<option value="${s}">${s}</option>`; });
+            }
+        }
+
+        function atualizarTodosSelectsCards() {
+            document.querySelectorAll('.select-custom[id^="cat-"]').forEach(sel => {
+                const bId = sel.id.replace('cat-', '');
+                const val = sel.value; sel.innerHTML = '';
+                for (const [id, cat] of Object.entries(dadosCategorias)) {
+                    sel.innerHTML += `<option value="${id}">${id}. ${cat.nome}</option>`;
+                }
+                if(val) sel.value = val;
+                atualizarSubcategoriasSelect(bId);
+            });
+        }
+
+        function mudarDataCalendario(novaData) {
+            dataSelecionadaCalendario = novaData;
+            renderizarAgenda();
+        }
+
+        function obterEstruturaBlocos() {
+            const hoje = new Date();
+            const formatar = (d) => `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
+            
+            const mapeamentoDias = [
+                { id: 'dom', nome: 'Domingo', offset: 7, ordem: 7 },
+                { id: 'seg', nome: 'Segunda-feira', offset: 1, ordem: 1 },
+                { id: 'ter', nome: 'Terça-feira', offset: 2, ordem: 2 },
+                { id: 'qua', nome: 'Quarta-feira', offset: 3, ordem: 3 },
+                { id: 'qui', nome: 'Quinta-feira', offset: 4, ordem: 4 },
+                { id: 'sex', nome: 'Sexta-feira', offset: 5, ordem: 5 },
+                { id: 'sab', nome: 'Sábado', offset: 6, ordem: 6 }
+            ];
+
+            const diaSemanaAtual = hoje.getDay() === 0 ? 7 : hoje.getDay();
+
+            if (filtroTempoAtual === 'hoje') {
+                const configDia = mapeamentoDias.find(m => m.ordem === diaSemanaAtual);
+                const dataCorrespondente = new Date(hoje);
+                return [{ 
+                    id: configDia.id + '_' + dataCorrespondente.getFullYear() + '_' + (dataCorrespondente.getMonth() + 1), 
+                    nome: configDia.nome, 
+                    data: formatar(hoje),
+                    focoClasse: 'hoje'
+                }];
+            }
+            if (filtroTempoAtual === 'semana') {
+                const diasSemanaOrdem = [
+                    { id: 'seg', nome: 'Segunda-feira', offset: 1, ordem: 1 }, { id: 'ter', nome: 'Terça-feira', offset: 2, ordem: 2 },
+                    { id: 'qua', nome: 'Quarta-feira', offset: 3, ordem: 3 }, { id: 'qui', nome: 'Quinta-feira', offset: 4, ordem: 4 },
+                    { id: 'sex', nome: 'Sexta-feira', offset: 5, ordem: 5 }, { id: 'sab', nome: 'Sábado', offset: 6, ordem: 6 },
+                    { id: 'dom', nome: 'Domingo', offset: 7, ordem: 7 }
+                ];
+                return diasSemanaOrdem.map(d => {
+                    const r = new Date(hoje); 
+                    r.setDate(hoje.getDate() + (d.offset - diaSemanaAtual));
+                    
+                    let foco = 'futuro';
+                    if (d.ordem === diaSemanaAtual) foco = 'hoje';
+                    else if (d.ordem < diaSemanaAtual) foco = 'passado';
+
+                    return { 
+                        id: d.id + '_' + r.getFullYear() + '_' + (r.getMonth()+1), 
+                        nome: d.nome, 
+                        data: formatar(r),
+                        focoClasse: foco
+                    };
+                });
+            }
+            if (filtroTempoAtual === 'mes') {
+                const partes = dataSelecionadaCalendario.split('-');
+                const dataAlvo = new Date(partes[0], partes[1] - 1, partes[2]);
+                const meses = ['Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho', 'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'];
+                
+                const dSemana = dataAlvo.getDay();
+                const configDia = mapeamentoDias[dSemana];
+                const idGlobalUnificado = `${configDia.id}_${partes[0]}_${parseInt(partes[1])}`;
+
+                return [{
+                    id: idGlobalUnificado,
+                    nome: `${configDia.nome} (${meses[dataAlvo.getMonth()]})`,
+                    data: formatar(dataAlvo),
+                    isCalendario: true,
+                    focoClasse: 'hoje'
+                }];
+            }
+        }
+
+        function renderizarAgenda() {
+            const container = document.getElementById('agenda-semanal');
+            container.innerHTML = '';
+
+            if(filtroTempoAtual === 'relatorio') {
+                renderizarPainelRelatorio(container);
+                return;
+            }
+
+            const blocos = obterEstruturaBlocos();
+
+            blocos.forEach(b => {
+                const card = document.createElement('div');
+                card.className = `dia-card ${b.focoClasse}`;
+                const tarefas = rotinaUsuario[b.id] || [];
+                const ok = tarefas.filter(t => t.concluido).length;
+                const pct = tarefas.length > 0 ? Math.round((ok / tarefas.length) * 100) : 0;
+
+                let htmlCalendarioEsquema = '';
+                if(b.isCalendario) {
+                    htmlCalendarioEsquema = `
+                        <div class="calendario-picker-container">
+                            <span class="calendario-label"><i class="far fa-calendar-check"></i> Escolha o Mês/Dia para Atualizar:</span>
+                            <input type="date" class="input-data-picker" value="${dataSelecionadaCalendario}" onchange="mudarDataCalendario(this.value)">
+                        </div>
+                    `;
+                }
+
+                card.innerHTML = `
+                    <div class="dia-header">
+                        <div>
+                            <div class="dia-titulo">${b.nome}</div>
+                            <div class="dia-data">${b.data}</div>
+                        </div>
+                        <span class="contador-tarefas" id="contador-${b.id}">${ok}/${tarefas.length}</span>
+                    </div>
+                    <div class="progresso-container">
+                        <div class="progresso-barra" id="barra-${b.id}" style="width: ${pct}%"></div>
+                    </div>
+                    ${htmlCalendarioEsquema}
+                `;
+
+                const lista = document.createElement('ul');
+                lista.className = 'rotina-lista';
+
+                tarefas.forEach((item, index) => {
+                    const li = document.createElement('li');
+                    li.id = `item-${b.id}-${item.id}`;
+                    li.className = `rotina-item ${item.concluido ? 'concluido' : ''}`;
+                    const cat = dadosCategorias[item.categoria] || { nome: "Foco", icone: "fa-star" };
+
+                    li.innerHTML = `
+                        <div class="item-corpo" onclick="alternarStatus('${b.id}', ${item.id})">
+                            <div class="checkbox-custom"><i class="fas fa-check" style="color:#000 !important;"></i></div>
+                            <div class="item-info-wrapper">
+                                <div class="item-conteudo-linha">
+                                    <div class="item-texto-wrapper">
+                                        ${item.hora ? `<span class="tag-hora-topo"><i class="far fa-clock"></i> ${item.hora}</span>` : ''}
+                                        <span class="item-texto">${item.texto}</span>
+                                    </div>
+                                </div>
+                                <div class="item-conteudo-linha">
+                                    <div class="item-meta">
+                                        <span class="tag-categoria" title="${cat.nome}"><i class="fas ${cat.icone}" style="color:var(--cor-accent) !important;"></i> ${cat.nome}</span>
+                                        ${item.subcategoria ? `<span class="tag-subcategoria" title="${item.subcategoria}">${item.subcategoria}</span>` : ''}
+                                    </div>
+                                    <div class="item-acoes">
+                                        <button class="btn-acao" title="Subir" onclick="moverItem('${b.id}', ${index}, -1); event.stopPropagation();"><i class="fas fa-chevron-up"></i></button>
+                                        <button class="btn-acao" title="Descer" onclick="moverItem('${b.id}', ${index}, 1); event.stopPropagation();"><i class="fas fa-chevron-down"></i></button>
+                                        <button class="btn-acao" title="Editar" onclick="abrirModalEditarItem('${b.id}', ${item.id}); event.stopPropagation();"><i class="fas fa-pencil-alt"></i></button>
+                                        <button class="btn-acao btn-excluir" title="Excluir" onclick="excluirItem('${b.id}', ${item.id}); event.stopPropagation();"><i class="fas fa-trash-alt"></i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    lista.appendChild(li);
+                });
+
+                let op = '';
+                for (const [id, c] of Object.entries(dadosCategorias)) { op += `<option value="${id}">${id}. ${c.nome}</option>`; }
+
+                const form = document.createElement('div');
+                form.className = 'form-add';
+                form.innerHTML = `
+                    <div class="form-row">
+                        <select class="select-custom" id="cat-${b.id}" onchange="atualizarSubcategoriasSelect('${b.id}')">${op}</select>
+                        <select class="select-custom" id="sub-${b.id}"></select>
+                    </div>
+                    <div class="form-row">
+                        <input type="text" placeholder="Anotação..." class="input-texto" id="txt-${b.id}">
+                        <input type="time" class="input-hora" style="width:105px;" id="hora-${b.id}">
+                    </div>
+                    <button class="btn-salvar" onclick="adicionarItem('${b.id}')">Confirmar na Agenda</button>
+                `;
+
+                card.appendChild(lista);
+                card.appendChild(form);
+                container.appendChild(card);
+                atualizarSubcategoriasSelect(b.id);
+            });
+        }
+
+        function renderizarPainelRelatorio(containerTarget) {
+            let totalGeral = 0;
+            let concluidasGeral = 0;
+            let contagemCategorias = {};
+
+            for (const key in dadosCategorias) {
+                contagemCategorias[key] = 0;
+            }
+
+            Object.keys(rotinaUsuario).forEach(blocoId => {
+                const tarefasBloco = rotinaUsuario[blocoId] || [];
+                tarefasBloco.forEach(t => {
+                    totalGeral++;
+                    if(t.concluido) concluidasGeral++;
+                    if(contagemCategorias[t.categoria] !== undefined) {
+                        contagemCategorias[t.categoria]++;
+                    }
+                });
+            });
+
+            const taxaEficiencia = totalGeral > 0 ? Math.round((concluidasGeral / totalGeral) * 100) : 0;
+
+            const cardRelatorio = document.createElement('div');
+            cardRelatorio.className = 'dia-card hoje';
+            cardRelatorio.style.minHeight = 'auto';
+
+            cardRelatorio.innerHTML = `
+                <div class="dia-header" style="margin-bottom: 20px;">
+                    <div>
+                        <div class="dia-titulo"><i class="fas fa-chart-pie" style="color:var(--cor-accent);"></i> Relatório de Desempenho</div>
+                        <div class="dia-data">Métricas consolidadas de todas as páginas</div>
+                    </div>
+                </div>
+
+                <div class="relatorio-container">
+                    <div class="grid-cards-mini">
+                        <div class="card-mini-metrica">
+                            <span>Eficiência</span>
+                            <strong class="gold">${taxaEficiencia}%</strong>
+                        </div>
+                        <div class="card-mini-metrica">
+                            <span>Criadas</span>
+                            <strong>${totalGeral}</strong>
+                        </div>
+                        <div class="card-mini-metrica">
+                            <span>Feitas</span>
+                            <strong style="color:var(--cor-sucesso);">${concluidasGeral}</strong>
+                        </div>
+                    </div>
+
+                    <div class="box-grafico">
+                        <h4><i class="fas fa-chart-line"></i> Produtividade por Bloco</h4>
+                        <div class="wrapper-canvas">
+                            <canvas id="chartEvolucaoLinha"></canvas>
+                        </div>
+                    </div>
+
+                    <div class="box-grafico">
+                        <h4><i class="fas fa-chart-pie"></i> Distribuição de Foco</h4>
+                        <div class="wrapper-canvas" style="height: 200px;">
+                            <canvas id="chartCategoriasPizza"></canvas>
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            containerTarget.appendChild(cardRelatorio);
+
+            let labelsLinha = [];
+            let dadosConcluidos = [];
+            let dadosTotais = [];
+
+            Object.keys(rotinaUsuario).slice(-6).forEach(bloco => {
+                labelsLinha.push(bloco.split('_')[0].toUpperCase());
+                const arr = rotinaUsuario[bloco] || [];
+                dadosTotais.push(arr.length);
+                dadosConcluidos.push(arr.filter(x => x.concluido).length);
+            });
+
+            if(labelsLinha.length === 0) {
+                labelsLinha = ["NENHUM"]; dadosTotais = [0]; dadosConcluidos = [0];
+            }
+
+            setTimeout(() => {
+                const ctxLinha = document.getElementById('chartEvolucaoLinha').getContext('2d');
+                if (instanciaGraficoLinha) instanciaGraficoLinha.destroy();
+                instanciaGraficoLinha = new Chart(ctxLinha, {
+                    type: 'line',
+                    data: {
+                        labels: labelsLinha,
+                        datasets: [
+                            {
+                                label: 'Concluídas',
+                                data: dadosConcluidos,
+                                borderColor: '#30d158',
+                                backgroundColor: 'rgba(48, 209, 88, 0.1)',
+                                tension: 0.3,
+                                fill: true
+                            },
+                            {
+                                label: 'Totais',
+                                data: dadosTotais,
+                                borderColor: '#d4af37',
+                                backgroundColor: 'transparent',
+                                tension: 0.3,
+                                borderDash: [4, 4]
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: { legend: { display: false } },
+                        scales: {
+                            x: { grid: { display: false }, ticks: { color: '#8e8e93', font: { size: 10 } } },
+                            y: { grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#8e8e93', font: { size: 10 }, stepSize: 1 } }
+                        }
+                    }
+                });
+
+                let labelsPizza = [];
+                let dadosPizza = [];
+                for (const id in contagemCategorias) {
+                    if(contagemCategorias[id] > 0) {
+                        labelsPizza.push(dadosCategorias[id].nome);
+                        dadosPizza.push(contagemCategorias[id]);
+                    }
+                }
+
+                if(labelsPizza.length === 0) { labelsPizza = ["Sem Tarefas"]; dadosPizza = [1]; }
+
+                const ctxPizza = document.getElementById('chartCategoriasPizza').getContext('2d');
+                if (instanciaGraficoPizza) instanciaGraficoPizza.destroy();
+                instanciaGraficoPizza = new Chart(ctxPizza, {
+                    type: 'doughnut',
+                    data: {
+                        labels: labelsPizza,
+                        datasets: [{
+                            data: dadosPizza,
+                            backgroundColor: ['#d4af37', '#30d158', '#ff453a', '#0a84ff', '#bf5af2', '#ff9f0a', '#5e5ce6', '#64d2ff', '#ff375f', '#ac8e68'],
+                            borderWidth: 0
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: {
+                                position: 'right',
+                                labels: { color: '#f5f5f7', font: { size: 9 }, boxWidth: 10 }
+                            }
+                        }
+                    }
+                });
+            }, 50);
+        }
+
+        function alternarStatus(bId, itemId) {
+            const t = rotinaUsuario[bId].find(x => x.id === itemId);
+            t.concluido = !t.concluido;
+            
+            const elementoDOM = document.getElementById(`item-${bId}-${itemId}`);
+
+            if (elementoDOM) {
+                if (t.concluido) {
+                    elementoDOM.classList.add('concluido');
+                    elementoDOM.classList.add('animar-concluido');
+                } else {
+                    elementoDOM.classList.remove('concluido');
+                    elementoDOM.classList.remove('animar-concluido');
+                }
+            }
+
+            const totalTarefas = rotinaUsuario[bId].length;
+            const concluidas = rotinaUsuario[bId].filter(x => x.concluido).length;
+            const novaPct = totalTarefas > 0 ? Math.round((concluidas / totalTarefas) * 100) : 0;
+            
+            const contElem = document.getElementById(`contador-${bId}`);
+            const barraElem = document.getElementById(`barra-${bId}`);
+            if (contElem) contElem.innerText = `${concluidas}/${totalTarefas}`;
+            if (barraElem) barraElem.style.width = `${novaPct}%`;
+
+            if(t.concluido) {
+                const audio = document.getElementById('audio-confirmacao');
+                if(audio) {
+                    audio.currentTime = 0;
+                    audio.play().catch(e => console.log("Som ativado via toque."));
+                }
+                canvasConfetti({ particleCount: 50, spread: 45, origin: { y: 0.82 }, colors: ['#d4af37', '#ffffff'] });
+            }
+            
+            salvarDados(); 
+            setTimeout(() => { if(elementoDOM) elementoDOM.classList.remove('animar-concluido'); }, 400);
+        }
+
+        function adicionarItem(bId) {
+            const cat = document.getElementById(`cat-${bId}`).value;
+            const sub = document.getElementById(`sub-${bId}`).value;
+            const txt = document.getElementById(`txt-${bId}`).value.trim();
+            const hora = document.getElementById(`hora-${bId}`).value;
+
+            if(!rotinaUsuario[bId]) rotinaUsuario[bId] = [];
+            rotinaUsuario[bId].push({
+                id: Date.now(),
+                texto: txt !== "" ? `${sub} — ${txt}` : sub,
+                categoria: parseInt(cat),
+                subcategoria: sub,
+                hora: hora || null,
+                concluido: false
+            });
+            salvarDados(); renderizarAgenda();
+        }
+
+        function abrirModalEditarItem(bId, itemId) {
+            const t = rotinaUsuario[bId].find(x => x.id === itemId);
+            abrirModalCustom("Altere a anotação:", t.texto, function(novoTexto) {
+                if(novoTexto.trim()) {
+                    t.texto = novoTexto.trim();
+                    salvarDados(); renderizarAgenda();
+                }
+            });
+        }
+
+        function moverItem(bId, index, direcao) {
+            const novasTarefas = [...rotinaUsuario[bId]];
+            const alvo = index + direcao;
+            if (alvo >= 0 && alvo < novasTarefas.length) {
+                const temp = novasTarefas[index];
+                novasTarefas[index] = novasTarefas[alvo];
+                novasTarefas[alvo] = temp;
+                rotinaUsuario[bId] = novasTarefas;
+                salvarDados(); renderizarAgenda();
+            }
+        }
+
+        function excluirItem(bId, itemId) {
+            rotinaUsuario[bId] = rotinaUsuario[bId].filter(x => x.id !== itemId);
+            salvarDados(); renderizarAgenda();
+        }
+
+        window.onload = renderizarAgenda;
+    </script>
+</body>
+</html>
